@@ -1,0 +1,34 @@
+{
+  "name": "@whojudge/alice",
+  "version": "1.0.0",
+  "description": "An lrun-based informatics judger.",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "npm run build && node ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sfls/alice.git"
+  },
+  "author": "sfls",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sfls/alice/issues"
+  },
+  "homepage": "https://github.com/sfls/alice#readme",
+  "dependencies": {
+    "koa-bodyparser": "^4.2.1",
+    "koa-router": "^7.4.0",
+    "nanoid": "^2.0.3"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.0.48",
+    "@types/koa-bodyparser": "^4.3.0",
+    "@types/koa-router": "^7.0.40",
+    "@types/nanoid": "^2.0.0",
+    "koa": "^2.7.0",
+    "typescript": "^3.5.1"
+  }
+}
