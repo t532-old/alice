@@ -1,7 +1,9 @@
 import { spawn, StdioOptions } from 'child_process'
 import nanoid from 'nanoid'
-import { LRUN, MIRROR, PATH } from './config'
+import { LRUN, MIRROR, PATH } from '../config'
 import { promises as fs } from 'fs'
+import { pipeFromFile, pipeToFile } from './fs'
+import { noop } from './general'
 
 export enum LRUN_STATUS { NORMAL, TIME_LIMIT_EXCEEDED, MEMORY_LIMIT_EXCEEDED, OUTPUT_LIMIT_EXCEEDED, RUNTIME_ERROR }
 
@@ -12,16 +14,21 @@ export interface ILrunResult {
 }
 
 export async function mirrorfs(id: string, mirror: string[], type: 'setup' | 'teardown') {
-    const mirrorPath = `${PATH}/mirrorfs-config/${id}.mfsconf`
+    const mirrorPath = `${PATH()}/mirrorfs-config/${id}.mfsconf`
     await fs.writeFile(mirrorPath, mirror.map(i => `mirror ${i}`).join('\n'))
     const proc = spawn('lrun-mirrorfs', [
         '--name', id,
         `--${type}`, mirrorPath,
     ])
-    return new Promise<void>(resolve => proc.on('exit', resolve))
+    return new Promise<void>(resolve => proc.on('exit', async () => {
+        if (type === 'teardown')
+            await fs.unlink(mirrorPath)
+        resolve()
+    }))
 }
 
 function parseResult(result: string): ILrunResult {
+    if (!result) return null
     const pairs = result
         .split('\n')
         .map(i => i
@@ -53,7 +60,7 @@ export async function lrun(executable: string[], {
     time = 1000,
     output = 128 * 1024 * 1024,
     passExitcode = false,
-    resetEnv = true,
+    resetEnv = false,
     infile,
     outfile,
     errfile,
@@ -77,25 +84,10 @@ export async function lrun(executable: string[], {
         '--reset-env', String(resetEnv),
         '--isolate-process', String(isolate),
         '--max-memory', String(memory),
-        '--max-real-time', String(time),
+        '--max-real-time', (time / 1000).toFixed(3),
         '--max-output', String(output),
     ]
-    const stdio: StdioOptions = ['ignore', 'ignore', 'ignore', 'pipe']
-    let inf: fs.FileHandle,
-        ouf: fs.FileHandle,
-        erf: fs.FileHandle
-    if (infile) {
-        inf = await fs.open(infile, 'r')
-        stdio[0] = inf.fd
-    }
-    if (outfile) {
-        ouf = await fs.open(outfile, 'w')
-        stdio[0] = ouf.fd
-    }
-    if (errfile) {
-        erf = await fs.open(errfile, 'w')
-        stdio[0] = erf.fd
-    }
+    const stdio: StdioOptions = ['pipe', 'pipe', 'pipe', 'pipe']
     let mirrorfsCallback: () => void
     if (chroot) {
         const jailId = nanoid(),
@@ -104,16 +96,21 @@ export async function lrun(executable: string[], {
         args.push('--chroot', `/run/lrun/mirrorfs/${jailId}`)
         mirrorfsCallback = () => mirrorfs(jailId, mirror, 'teardown')
     }
-    args.push(...args)
     const proc = spawn('lrun', [...args, ...executable], {
         uid: LRUN().uid,
         gid: LRUN().gid,
         stdio,
     })
-    let rawResult: string
+    if (infile) pipeFromFile(proc.stdin, infile).catch(noop)
+    if (outfile) pipeToFile(proc.stdout, outfile).catch(noop)
+    if (errfile) pipeToFile(proc.stderr, errfile).catch(noop)
+    let rawResult: string = ''
     proc.stdio[3].on('data', d => rawResult += d)
     if (mirrorfsCallback) proc.on('exit', mirrorfsCallback)
     return new Promise<ILrunResult>(resolve => 
-        proc.on('exit', () => resolve(parseResult(rawResult)))
+        proc.on('exit', () => {
+            resolve(parseResult(rawResult))
+            console.log(args.join(' '), executable.join(' '))
+        })
     )
 }

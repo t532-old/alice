@@ -6,8 +6,14 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "npm run build && node ."
+    "start": "npm run build && node .",
+    "prepare": "npm run build"
   },
+  "files": [
+    "dist/",
+    "LICENSE",
+    "README.md"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sfls/alice.git"
@@ -19,9 +25,12 @@
   },
   "homepage": "https://github.com/sfls/alice#readme",
   "dependencies": {
+    "axios": "^0.19.0",
     "koa-bodyparser": "^4.2.1",
     "koa-router": "^7.4.0",
-    "nanoid": "^2.0.3"
+    "nanoid": "^2.0.3",
+    "tus-js-client": "^1.8.0-1",
+    "tus-node-server": "^0.3.2"
   },
   "devDependencies": {
     "@types/koa": "^2.0.48",

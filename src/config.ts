@@ -1,8 +1,12 @@
+import { absolutePath } from './util/general'
+
 let _PATH: string
 let _LANGUAGE: Record<string, ILanguageInfo>
 let _MIRROR: string[]
 let _LRUN: ILrunConfig
 let _CONCURRENT: number
+let _TOKEN: string
+let _WEBHOOK: string
 
 export type ISpawnTuple = string[]
 
@@ -10,6 +14,7 @@ export interface ILanguageInfo {
     compiler: string[]
     runner: string[]
     extension: string
+    mirror: string[]
 }
 
 export interface ILrunConfig {
@@ -25,18 +30,24 @@ export async function init({
     mirror,
     lrun,
     concurrent,
+    token,
+    webhook,
 }: {
     path: string
     language: Record<string, ILanguageInfo>
     mirror: string[]
     lrun: ILrunConfig
     concurrent: number
+    token: string
+    webhook: string
 }) {
-    _PATH = path
+    _PATH = absolutePath(path)
     _LANGUAGE = language
     _MIRROR = mirror
     _LRUN = lrun
     _CONCURRENT = concurrent
+    _TOKEN = token
+    _WEBHOOK = webhook
 }
 
 export function PATH() { return _PATH }
@@ -44,3 +55,5 @@ export function LANG(lang: string) { return _LANGUAGE[lang] }
 export function MIRROR() { return _MIRROR }
 export function LRUN() { return _LRUN }
 export function CONCURRENT() { return _CONCURRENT }
+export function TOKEN() { return _TOKEN }
+export function WEBHOOK() { return _WEBHOOK }
