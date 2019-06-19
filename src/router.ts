@@ -1,9 +1,8 @@
 /// <reference types="koa-bodyparser" />
 import Router from 'koa-router'
-import { deleteTestcase, updateTestcase } from './testcase'
 import { deleteSpecialJudge, updateSpecialJudge, compileSpecialJudge } from './spj'
 import { performTask } from './task'
-import { updateSubmission, compileSubmission, testSubmission } from './submission';
+import { updateSubmission, compileSubmission, testSubmission } from './submission'
 
 export function router(prefix: string) {
     const _router = new Router<{ taskId: string }, {
@@ -16,16 +15,6 @@ export function router(prefix: string) {
             memory?: string
         }
     }>()
-    _router.delete('/delete_testcase', async ctx => {
-        deleteTestcase(ctx.request.query['testcase_id'])
-    })
-    // BUG: Tus server cannot be put in koa middlewares
-    _router.all('/update_testcase_infile(.*)', async ctx => {
-        updateTestcase(ctx.request.header['testcase-id'], 'in', ctx.req, ctx.res)
-    })
-    _router.all('/update_testcase_outfile(.*)', async ctx => {
-        updateTestcase(ctx.request.header['testcase-id'], 'out', ctx.req, ctx.res)
-    })
     _router.delete('/delete_specialjudge', async ctx => {
         performTask(
             ctx.state.taskId,

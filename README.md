@@ -12,7 +12,9 @@ Alice is designed to be used with Koa:
 ```ts
 import { init, use } from '@whojudge/alice'
 init({
-    path: './cache/', // Cache path, Where codes and executables are stored (with trailing slash)
+    cachePath: './cache/', // Cache path, Where codes and executables are temporarily stored (with trailing slash)
+    infilePath: './uploads/infile', // Testcase Infile Path (Handle file uploading by ourself - alice does not do that)
+    outfilePath: './uploads/outfile', // Testcase Outfile Path
     language: { // Language info
         cpp: {
             compiler: 'g++ -Wall -Wextra -std=c++98 {infile} -o {outfile}'.split(' '), // Compiler must be an array

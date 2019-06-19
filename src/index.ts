@@ -1,14 +1,10 @@
 import Koa from 'koa'
-import { init as initConfig, PATH, TOKEN } from './config'
+import { init as initConfig, CACHE_PATH, TOKEN } from './config'
 import { promises as fs } from 'fs'
 import { router } from './router'
 import nanoid from 'nanoid'
-import { initTestcaseStore } from './testcase'
 
 const INIT_PATH = [
-    'testcase/',
-        'testcase/infile/',
-        'testcase/outfile/',
     'spj/',
         'spj/source/',
         'spj/binary/',
@@ -21,10 +17,9 @@ const INIT_PATH = [
 ]
 export async function init(config: Parameters<typeof initConfig>[0]) {
     initConfig(config)
-    try { await fs.mkdir(PATH()) } catch {}
+    try { await fs.mkdir(CACHE_PATH()) } catch {}
     for (const path of INIT_PATH)
-        try { await fs.mkdir(`${PATH()}/${path}`) } catch {}
-    initTestcaseStore()
+        try { await fs.mkdir(`${CACHE_PATH()}/${path}`) } catch {}
 }
 
 export function use(server: Koa, prefix: string) {

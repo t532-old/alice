@@ -1,6 +1,8 @@
 import { absolutePath } from './util/general'
 
-let _PATH: string
+let _CACHE_PATH: string,
+    _INFILE_PATH: string,
+    _OUTFILE_PATH: string
 let _LANGUAGE: Record<string, ILanguageInfo>
 let _MIRROR: string[]
 let _LRUN: ILrunConfig
@@ -25,7 +27,9 @@ export interface ILrunConfig {
 }
 
 export async function init({
-    path,
+    cachePath,
+    infilePath,
+    outfilePath,
     language,
     mirror,
     lrun,
@@ -33,7 +37,9 @@ export async function init({
     token,
     webhook,
 }: {
-    path: string
+    cachePath: string
+    infilePath: string
+    outfilePath: string
     language: Record<string, ILanguageInfo>
     mirror: string[]
     lrun: ILrunConfig
@@ -41,7 +47,9 @@ export async function init({
     token: string
     webhook: string
 }) {
-    _PATH = absolutePath(path)
+    _CACHE_PATH = absolutePath(cachePath)
+    _INFILE_PATH = absolutePath(infilePath)
+    _OUTFILE_PATH = absolutePath(outfilePath)
     _LANGUAGE = language
     _MIRROR = mirror
     _LRUN = lrun
@@ -50,7 +58,9 @@ export async function init({
     _WEBHOOK = webhook
 }
 
-export function PATH() { return _PATH }
+export function CACHE_PATH() { return _CACHE_PATH }
+export function INFILE_PATH() { return _INFILE_PATH }
+export function OUTFILE_PATH() { return _OUTFILE_PATH }
 export function LANG(lang: string) { return _LANGUAGE[lang] }
 export function MIRROR() { return _MIRROR }
 export function LRUN() { return _LRUN }

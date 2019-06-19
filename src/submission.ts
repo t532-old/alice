@@ -1,21 +1,20 @@
 import { promises as fs } from 'fs'
-import { PATH, LANG, LRUN } from './config'
+import { CACHE_PATH, INFILE_PATH, OUTFILE_PATH, LANG, LRUN } from './config'
 import { lrun, LRUN_STATUS } from './util/lrun'
 import { Readable } from 'stream'
 import { pipeToFile } from './util/fs'
 
 export function deleteSubmission(id: string) {
     return Promise.all([
-        fs.unlink(`${PATH()}/submission/source/${id}${LANG('cpp').extension}`),
-        fs.unlink(`${PATH()}/submission/binary/${id}`),
+        fs.unlink(`${CACHE_PATH()}/submission/source/${id}${LANG('cpp').extension}`),
+        fs.unlink(`${CACHE_PATH()}/submission/binary/${id}`),
     ])
 }
 
 export function updateSubmission(id: string, data: Readable, lang: string) {
     const langInfo = LANG(lang)
     if (langInfo)
-        return pipeToFile(data, `${PATH()}/submission/source/${id}${LANG(lang).extension}`)
-    console.log('no lang')
+        return pipeToFile(data, `${CACHE_PATH()}/submission/source/${id}${LANG(lang).extension}`)
     return Promise.resolve()
 }
 
@@ -26,14 +25,13 @@ export async function compileSubmission(id: string, lang: string) {
             const result = await lrun(
                 langInfo.compiler
                 .map(i => i
-                    .replace(/\{infile\}/g, `${PATH()}/submission/source/${id}${langInfo.extension}`)
-                    .replace(/\{outfile\}/g, `${PATH()}/submission/binary/${id}`)
+                    .replace(/\{infile\}/g, `${CACHE_PATH()}/submission/source/${id}${langInfo.extension}`)
+                    .replace(/\{outfile\}/g, `${CACHE_PATH()}/submission/binary/${id}`)
                 ), {
                     time: LRUN().compilerTime,
                     memory: LRUN().compilerMemory,
                 }
             )
-            console.log('finish')
             if (result.status === LRUN_STATUS.NORMAL)
                 return { success: true }
         } else return { success: true }
@@ -49,19 +47,19 @@ export async function testSubmission(submission: string, testcase: string, speci
     const result = await lrun(
         langInfo.runner
         .map(i => i
-            .replace(/\{infile\}/g, `${PATH()}/submission/source/${submission}${langInfo.extension}`)
-            .replace(/\{outfile\}/g, `${PATH()}/submission/binary/${submission}`)
+            .replace(/\{infile\}/g, `${CACHE_PATH()}/submission/source/${submission}${langInfo.extension}`)
+            .replace(/\{outfile\}/g, `${CACHE_PATH()}/submission/binary/${submission}`)
         ), {
             time,
             memory,
             chroot: true,
             jailFile: [
-                `${PATH()}/submission/source/${submission}${langInfo.extension}`,
-                `${PATH()}/submission/binary/${submission}`,
+                `${CACHE_PATH()}/submission/source/${submission}${langInfo.extension}`,
+                `${CACHE_PATH()}/submission/binary/${submission}`,
                 ...langInfo.mirror,
             ],
-            infile: `${PATH()}/testcase/infile/${testcase}.in`,
-            outfile: `${PATH()}/submission/outfile/${submission}.out`
+            infile: `${INFILE_PATH()}/${testcase}.in`,
+            outfile: `${CACHE_PATH()}/submission/outfile/${submission}.out`
         }
     )
     const conclusion = {
@@ -88,30 +86,30 @@ export async function testSubmission(submission: string, testcase: string, speci
         const spjRunResult = await lrun([
             ...LANG('cpp').runner
             .map(i => i
-                .replace(/\{infile\}/g, `${PATH()}/spj/source/${specialjudge}${LANG('cpp').extension}`)
-                .replace(/\{outfile\}/g, `${PATH()}/spj/binary/${specialjudge}`)
+                .replace(/\{infile\}/g, `${CACHE_PATH()}/spj/source/${specialjudge}${LANG('cpp').extension}`)
+                .replace(/\{outfile\}/g, `${CACHE_PATH()}/spj/binary/${specialjudge}`)
             ),
-            `${PATH()}/testcase/infile/${testcase}.in`,
-            `${PATH()}/submission/outfile/${submission}.out`,
-            `${PATH()}/testcase/outfile/${testcase}.out`,
+            `${INFILE_PATH()}/${testcase}.in`,
+            `${CACHE_PATH()}/submission/outfile/${submission}.out`,
+            `${OUTFILE_PATH()}/${testcase}.out`,
         ], {
             time,
             memory,
             chroot: true,
             jailFile: [
-                `${PATH()}/spj/source/${submission}${langInfo.extension}`,
-                `${PATH()}/spj/binary/${submission}`,
-                `${PATH()}/testcase/infile/${testcase}.in`,
-                `${PATH()}/submission/outfile/${submission}.out`,
-                `${PATH()}/testcase/outfile/${testcase}.out`,
+                `${CACHE_PATH()}/spj/source/${submission}${langInfo.extension}`,
+                `${CACHE_PATH()}/spj/binary/${submission}`,
+                `${INFILE_PATH()}/${testcase}.in`,
+                `${CACHE_PATH()}/submission/outfile/${submission}.out`,
+                `${OUTFILE_PATH()}/${testcase}.out`,
                 ...langInfo.mirror,
             ],
-            errfile: `${PATH()}/submission/result/${submission}.out`
+            errfile: `${CACHE_PATH()}/submission/result/${submission}.out`
         })
         if (!spjRunResult)
             conclusion.status = 'SJE'
         else {
-            const spjResult = await fs.readFile(`${PATH()}/submission/result/${submission}.out`, 'utf-8')
+            const spjResult = await fs.readFile(`${CACHE_PATH()}/submission/result/${submission}.out`, 'utf-8')
             if (spjResult.startsWith('ok'))
                 conclusion.status = 'AC'
             else conclusion.status = 'WA'

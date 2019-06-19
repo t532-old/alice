@@ -1,6 +1,6 @@
 import { spawn, StdioOptions } from 'child_process'
 import nanoid from 'nanoid'
-import { LRUN, MIRROR, PATH } from '../config'
+import { LRUN, MIRROR, CACHE_PATH } from '../config'
 import { promises as fs } from 'fs'
 import { pipeFromFile, pipeToFile } from './fs'
 import { noop } from './general'
@@ -14,7 +14,7 @@ export interface ILrunResult {
 }
 
 export async function mirrorfs(id: string, mirror: string[], type: 'setup' | 'teardown') {
-    const mirrorPath = `${PATH()}/mirrorfs-config/${id}.mfsconf`
+    const mirrorPath = `${CACHE_PATH()}/mirrorfs-config/${id}.mfsconf`
     await fs.writeFile(mirrorPath, mirror.map(i => `mirror ${i}`).join('\n'))
     const proc = spawn('lrun-mirrorfs', [
         '--name', id,
@@ -108,9 +108,7 @@ export async function lrun(executable: string[], {
     proc.stdio[3].on('data', d => rawResult += d)
     if (mirrorfsCallback) proc.on('exit', mirrorfsCallback)
     return new Promise<ILrunResult>(resolve => 
-        proc.on('exit', () => {
-            resolve(parseResult(rawResult))
-            console.log(args.join(' '), executable.join(' '))
-        })
+        proc.on('exit', () => 
+            resolve(parseResult(rawResult)))
     )
 }
