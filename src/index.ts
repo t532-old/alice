@@ -1,8 +1,9 @@
-import Koa from 'koa'
-import { init as initConfig, CACHE_PATH, TOKEN } from './config'
+import { init as initConfig, CACHE_PATH } from './config'
 import { promises as fs } from 'fs'
-import { router } from './router'
-import nanoid from 'nanoid'
+import * as spj from './spj'
+import * as submission from './submission'
+import { addTask } from './task'
+import { Readable } from 'stream'
 
 const INIT_PATH = [
     'spj/',
@@ -22,17 +23,28 @@ export async function init(config: Parameters<typeof initConfig>[0]) {
         try { await fs.mkdir(`${CACHE_PATH()}/${path}`) } catch {}
 }
 
-export function use(server: Koa, prefix: string) {
-    const _router = router(prefix)
-    server.use(async function checkToken(ctx, next) {
-        ctx.assert(ctx.request.header['x-access-token'] !== undefined, 401)
-        ctx.assert(ctx.request.header['x-access-token'] === TOKEN(), 403)
-        await next()
-    })
-    server.use(async function generateTaskId(ctx, next) {
-        ctx.body = { id: ctx.state.taskId = nanoid() }
-        await next()
-    })
-    server.use(_router.routes())
-          .use(_router.allowedMethods())
+export function deleteSpecialJudge(id: string) {
+    return addTask(() => spj.deleteSpecialJudge(id))
+}
+
+export function updateSpecialJudge(id: string, data: Readable) {
+    return addTask(
+        () => spj.updateSpecialJudge(id, data),
+        () => spj.compileSpecialJudge(id),
+    )
+}
+
+export function deleteSubmission(id: string) {
+    return addTask(() => submission.deleteSubmission(id))
+}
+
+export function createSubmission(id: string, data: Readable, lang: string) {
+    return addTask(
+        () => submission.updateSubmission(id, data, lang),
+        () => submission.compileSubmission(id, lang),
+    )
+}
+
+export function testSubmission(...args: Parameters<typeof submission.testSubmission>) {
+    return addTask(() => testSubmission(...args))
 }

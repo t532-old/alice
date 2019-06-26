@@ -1,5 +1,5 @@
 # alice
-An lrun-based Informatics Judger in TypeScript. WIP
+An lrun-based Informatics Judger in TypeScript.
 
 ## Dependency
 - Node.js with ES2017 Support (Better if > v12)
@@ -8,9 +8,8 @@ An lrun-based Informatics Judger in TypeScript. WIP
 - [lrun](https://github.com/quark-zju/lrun) (can run w/o libseccomp)
 
 ## Configure
-Alice is designed to be used with Koa:
 ```ts
-import { init, use } from '@whojudge/alice'
+import { init } from '@whojudge/alice'
 init({
     cachePath: './cache/', // Cache path, Where codes and executables are temporarily stored (with trailing slash)
     infilePath: './uploads/infile', // Testcase Infile Path (Handle file uploading by ourself - alice does not do that)
@@ -44,14 +43,11 @@ init({
         compilerMemory: 256 * 1024 * 1024, // Max memory for compilers (Bytes)
     },
     concurrent: 4, // How many compile & run tasks can be run concurrently
-    token: 'testToken', // The token for accessing the API as well as calling the webhook, by specifying X-Access-Token HTTP header
-    webhook: 'http://localhost:5000/_webhook', // The webhook, used to notify that a compile / run task is finished
 })
-use(app)
 ```
 
 ## Run
-- Run the server with `sudo`; or alice won't be able to switch uid/gid.
+- Run with `sudo`; or alice won't be able to switch uid/gid.
 - `chown` the cache path to the lrun user.
 - Copy [`testlib.h`](https://github.com/MikeMirzayanov/testlib) to `${cachePath}/spj/source`.
 
