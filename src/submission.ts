@@ -64,6 +64,7 @@ export async function testSubmission(submission: string, testcase: string, speci
     )
     const conclusion = {
         status: 'UKE',
+        points: 0,
         time: result.time,
         memory: result.memory,
     }
@@ -110,9 +111,13 @@ export async function testSubmission(submission: string, testcase: string, speci
             conclusion.status = 'SJE'
         else {
             const spjResult = await fs.readFile(`${CACHE_PATH()}/submission/result/${submission}.out`, 'utf-8')
-            if (spjResult.startsWith('ok'))
+            if (spjResult.startsWith('ok')) {
                 conclusion.status = 'AC'
-            else conclusion.status = 'WA'
+                conclusion.points = 1
+            } else if (spjResult.startsWith('points')) {
+                conclusion.status = 'PC'
+                conclusion.points = Number(spjResult.split(' ')[1])
+            } else conclusion.status = 'WA'
         }
     }
     return conclusion
