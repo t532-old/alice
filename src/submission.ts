@@ -55,15 +55,23 @@ export async function testSubmission(submission: string, testcase: string, speci
             chroot: true,
             jailFile: [
                 `${CACHE_PATH()}/submission/source/${submission}${langInfo.extension}`,
-                `${CACHE_PATH()}/submission/binary/${submission}`,
+                ...(langInfo.compiler ? [`${CACHE_PATH()}/submission/binary/${submission}`] : []),
                 ...langInfo.mirror,
             ],
             infile: `${INFILE_PATH()}/${testcase}.in`,
             outfile: `${CACHE_PATH()}/submission/outfile/${submission}.out`
         }
     )
+    if (!result) return {
+        status: 'UKE',
+        info: 'unknown error',
+        points: 0,
+        time: 0,
+        memory: 0,
+    }
     const conclusion = {
         status: 'UKE',
+        info: 'unknown error',
         points: 0,
         time: result.time,
         memory: result.memory,
@@ -71,15 +79,19 @@ export async function testSubmission(submission: string, testcase: string, speci
     switch (result.status) {
         case LRUN_STATUS.MEMORY_LIMIT_EXCEEDED:
             conclusion.status = 'MLE'
+            conclusion.info = 'memory limit exceeded'
             break
         case LRUN_STATUS.OUTPUT_LIMIT_EXCEEDED:
             conclusion.status = 'OLE'
+            conclusion.info = 'output limit exceeded'
             break
         case LRUN_STATUS.TIME_LIMIT_EXCEEDED:
             conclusion.status = 'TLE'
+            conclusion.info = 'time limit exceeded'
             break
         case LRUN_STATUS.RUNTIME_ERROR:
             conclusion.status = 'RE'
+            conclusion.info = 'runtime error'
             break
         default: break
     }
@@ -98,8 +110,8 @@ export async function testSubmission(submission: string, testcase: string, speci
             memory,
             chroot: true,
             jailFile: [
-                `${CACHE_PATH()}/spj/source/${submission}${langInfo.extension}`,
-                `${CACHE_PATH()}/spj/binary/${submission}`,
+                `${CACHE_PATH()}/spj/source/${specialjudge}${langInfo.extension}`,
+                `${CACHE_PATH()}/spj/binary/${specialjudge}`,
                 `${INFILE_PATH()}/${testcase}.in`,
                 `${CACHE_PATH()}/submission/outfile/${submission}.out`,
                 `${OUTFILE_PATH()}/${testcase}.out`,
@@ -107,9 +119,10 @@ export async function testSubmission(submission: string, testcase: string, speci
             ],
             errfile: `${CACHE_PATH()}/submission/result/${submission}.out`
         })
-        if (!spjRunResult)
+        if (!spjRunResult) {
             conclusion.status = 'SJE'
-        else {
+            conclusion.info = 'judger error. we\'re sorry!'
+        } else {
             const spjResult = await fs.readFile(`${CACHE_PATH()}/submission/result/${submission}.out`, 'utf-8')
             if (spjResult.startsWith('ok')) {
                 conclusion.status = 'AC'
@@ -118,6 +131,7 @@ export async function testSubmission(submission: string, testcase: string, speci
                 conclusion.status = 'PC'
                 conclusion.points = Number(spjResult.split(' ')[1])
             } else conclusion.status = 'WA'
+            conclusion.info = spjResult
         }
     }
     return conclusion

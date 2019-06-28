@@ -24,27 +24,33 @@ export async function init(config: Parameters<typeof initConfig>[0]) {
 }
 
 export function deleteSpecialJudge(id: string) {
-    return addTask(() => spj.deleteSpecialJudge(id))
+    return addTask<void>(() => spj.deleteSpecialJudge(id))
 }
 
 export function updateSpecialJudge(id: string, data: Readable) {
-    return addTask(
+    return addTask<{ success: boolean }>(
         () => spj.updateSpecialJudge(id, data),
         () => spj.compileSpecialJudge(id),
     )
 }
 
 export function deleteSubmission(id: string) {
-    return addTask(() => submission.deleteSubmission(id))
+    return addTask<void>(() => submission.deleteSubmission(id))
 }
 
 export function createSubmission(id: string, data: Readable, lang: string) {
-    return addTask(
+    return addTask<{ success: boolean }>(
         () => submission.updateSubmission(id, data, lang),
         () => submission.compileSubmission(id, lang),
     )
 }
 
 export function testSubmission(...args: Parameters<typeof submission.testSubmission>) {
-    return addTask(() => testSubmission(...args))
+    return addTask<{
+        status: string
+        info: string
+        points: number
+        time: number
+        memory: number
+    }>(() => submission.testSubmission(...args))
 }

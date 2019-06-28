@@ -1,12 +1,12 @@
 import { CONCURRENT } from './config'
-const taskQueue = new Array(CONCURRENT()).fill(Promise.resolve())
+const taskQueue: Promise<any>[] = new Array(CONCURRENT()).fill(Promise.resolve())
 let currentQueue = 0
 
 export interface ITask {
     (): Promise<any>
 }
 
-export function addTask(...tasks: ITask[]) {
+export function addTask<T = any>(...tasks: ITask[]): Promise<T> {
     tasks.forEach(task => 
         taskQueue[currentQueue] = taskQueue[currentQueue].then(task))
     const finalTask = taskQueue[currentQueue]

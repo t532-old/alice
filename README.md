@@ -64,14 +64,14 @@ int main(int argc, char *argv[]) {
     while (!ans.seekEof() && !ouf.seekEof()) {
         string ja = ans.readToken();
         string pa = ouf.readToken();
-        if (ja != pa) quitf(_wa, "");
+        if (ja != pa) quitf(_wa, "wrong answer");
     }
 
     bool ansEnded = ans.seekEof(),
          oufEnded = ouf.seekEof();
 
     if (ansEnded && oufEnded)
-        quitf(_ok, "");
+        quitf(_ok, "accepted");
     else if (ansEnded)
         quitf(_fail, "answer too short");
     else if (oufEnded)
