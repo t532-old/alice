@@ -1,4 +1,4 @@
-import { init as initConfig, CACHE_PATH } from './config'
+import { init as initConfig, CACHE_PATH, LRUN } from './config'
 import { promises as fs } from 'fs'
 import * as spj from './spj'
 import * as submission from './submission'
@@ -18,9 +18,15 @@ const INIT_PATH = [
 ]
 export async function init(config: Parameters<typeof initConfig>[0]) {
     initConfig(config)
-    try { await fs.mkdir(CACHE_PATH()) } catch {}
+    try {
+        await fs.mkdir(CACHE_PATH())
+        await fs.chown(CACHE_PATH(), LRUN().uid, LRUN().gid)
+    } catch {}
     for (const path of INIT_PATH)
-        try { await fs.mkdir(`${CACHE_PATH()}/${path}`) } catch {}
+        try {
+            await fs.mkdir(`${CACHE_PATH()}/${path}`)
+            await fs.chown(`${CACHE_PATH()}/${path}`, LRUN().uid, LRUN().gid)
+        } catch {}
 }
 
 export function deleteSpecialJudge(id: string) {
